@@ -85,8 +85,10 @@ resource "aws_lambda_function" "auth_service" {
   timeout       = var.lambda_timeout
 
   # Option 1: Local deployment package (update path as needed)
-  filename         = "../../backend/auth_deployment_package.zip" 
-  source_code_hash = filebase64sha256("../../backend/auth_deployment_package.zip")
+  # source_code_hash is based on the handler file to allow validation/plan without the zip present.
+  # The filename still points to the zip, which must be created by the CI/CD pipeline before apply.
+  filename         = "${path.root}/../backend/auth_deployment_package.zip" # Use path.root to ensure correct relative path
+  source_code_hash = filebase64sha256("${path.root}/../backend/services/auth_service/handler.py")
 
   # Option 2: S3 deployment package (uncomment and configure if using S3)
   # s3_bucket = "your-lambda-deployment-bucket"
@@ -122,8 +124,10 @@ resource "aws_lambda_function" "inventory_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  filename         = "../../backend/inventory_deployment_package.zip"
-  source_code_hash = filebase64sha256("../../backend/inventory_deployment_package.zip")
+  # source_code_hash is based on the handler file to allow validation/plan without the zip present.
+  # The filename still points to the zip, which must be created by the CI/CD pipeline before apply.
+  filename         = "${path.root}/../backend/inventory_deployment_package.zip" # Use path.root
+  source_code_hash = filebase64sha256("${path.root}/../backend/services/inventory_service/handler.py")
 
   environment {
     variables = {
@@ -155,8 +159,10 @@ resource "aws_lambda_function" "recipe_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  filename         = "../../backend/recipe_deployment_package.zip"
-  source_code_hash = filebase64sha256("../../backend/recipe_deployment_package.zip")
+  # source_code_hash is based on the handler file to allow validation/plan without the zip present.
+  # The filename still points to the zip, which must be created by the CI/CD pipeline before apply.
+  filename         = "${path.root}/../backend/recipe_deployment_package.zip" # Use path.root
+  source_code_hash = filebase64sha256("${path.root}/../backend/services/recipe_service/handler.py")
 
   environment {
     variables = {

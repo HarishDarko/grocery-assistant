@@ -855,6 +855,25 @@ Follow these steps carefully to set up your environment and perform the initial 
 *   **Backend Code Changes:** Modify files within the `backend/` directory and push them to the `main` branch. The `Backend Deployment` workflow will automatically run the packaging script and update the corresponding Lambda functions.
 *   **Frontend Code Changes:** Modify files within the `frontend/` directory and push them to the `main` branch. The `Frontend Deployment` workflow will automatically sync the changes to the S3 bucket and invalidate the CloudFront cache.
 
+### Destroying Infrastructure (Manual Workflow)
+
+**WARNING:** Destroying the infrastructure is irreversible and will delete all AWS resources created by Terraform for this project (VPC, Lambdas, API Gateway, S3 bucket content, CloudFront distribution, etc.). Use with extreme caution.
+
+To avoid incurring unnecessary costs, especially in a personal or development environment, a manual GitHub Actions workflow is provided to destroy the infrastructure.
+
+1.  **Navigate to Actions:** Go to the "Actions" tab in your GitHub repository.
+2.  **Select Workflow:** In the left sidebar, find and click on "Terraform Destroy (Manual)".
+3.  **Run Workflow:** Click the "Run workflow" dropdown button on the right.
+4.  **Confirm Destruction:** You will see an input field labeled "Type 'destroy' to confirm infrastructure teardown. THIS IS IRREVERSIBLE.". **Carefully type the word `destroy` into this field.** If you type anything else or leave it as the default, the destroy operation will be skipped.
+5.  **Execute:** Click the "Run workflow" button below the input field.
+6.  **Monitor:** The workflow will run, initialize Terraform, generate a destroy plan (which you can review in the logs), pause briefly for final cancellation, and then execute `terraform destroy -auto-approve` if you provided the correct confirmation text.
+
+**Important Considerations:**
+
+*   This workflow uses the same AWS credentials stored in your GitHub secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) as the deployment workflows. Ensure these credentials have the necessary permissions to delete the resources.
+*   The Terraform state file stored in your S3 backend bucket will **not** be deleted by this workflow. This allows you to potentially redeploy the infrastructure later. If you want to completely remove all traces, you would need to manually delete the S3 state bucket and the DynamoDB lock table from the AWS console after running the destroy workflow.
+*   The AWS Secrets Manager secret containing your application keys is **not** managed by this Terraform configuration and will **not** be deleted by the destroy workflow. You must manage its lifecycle separately in the AWS console.
+
 ## Troubleshooting
 
 -   **CORS Errors:** Double-check API Gateway CORS `Access-Control-Allow-Origin` matches your CloudFront URL. Ensure Lambda allows requests (should be handled by API Gateway Proxy integration).

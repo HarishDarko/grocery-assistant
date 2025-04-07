@@ -1,0 +1,84 @@
+name: Terraform Destroy (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Type "destroy" to confirm infrastructure teardown. THIS IS IRREVERSIBLE.'
+        required: true
+        default: 'do-not-destroy'
+
+jobs:
+  terraform-destroy:
+    name: 'Terraform Destroy'
+    runs-on: ubuntu-latest
+    environment: production # Or your relevant environment name if configured
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform # Set working directory for all run steps
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the latest version of Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: latest # Or pin to a specific version
+        terraform_wrapper: false # Recommended for CI/CD
+
+    # Configure AWS credentials from GitHub secrets
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1 # Or your desired region
+
+    # Initialize Terraform with S3 backend configuration
+    # Reads backend config from terraform/backend.tf
+    - name: Terraform Init
+      id: init
+      run: terraform init -input=false
+
+    # Generate a plan to destroy infrastructure
+    - name: Terraform Plan Destroy
+      id: plan-destroy
+      if: github.event.inputs.confirm_destroy == 'destroy'
+      run: terraform plan -destroy -no-color -input=false -var-file=terraform.tfvars
+      continue-on-error: true # Allow workflow to continue to display plan even if errors occur
+
+    # Display the destroy plan
+    - name: Show Destroy Plan
+      if: steps.plan-destroy.outputs.stdout != '' && github.event.inputs.confirm_destroy == 'destroy'
+      run: |
+        echo "Terraform Destroy Plan:"
+        echo "${{ steps.plan-destroy.outputs.stdout }}"
+        echo "-------------------------"
+        echo "If the plan looks correct and you intended to destroy, the next step will proceed."
+        echo "If you did NOT intend to destroy, cancel the workflow run NOW."
+        # Add a small delay to allow cancellation if needed
+        sleep 15
+
+    # Destroy Terraform infrastructure if confirmation is provided
+    - name: Terraform Destroy
+      id: destroy
+      if: github.event.inputs.confirm_destroy == 'destroy'
+      run: terraform destroy -auto-approve -no-color -input=false -var-file=terraform.tfvars
+      # Note: -auto-approve skips the interactive confirmation prompt in the CLI
+      # The workflow_dispatch input serves as the safety mechanism.
+
+    # Check destroy outcome
+    - name: Terraform Destroy Status
+      if: steps.destroy.outcome == 'failure' && github.event.inputs.confirm_destroy == 'destroy'
+      run: |
+        echo "Terraform destroy failed."
+        exit 1
+    - name: Terraform Destroy Success
+      if: steps.destroy.outcome == 'success' && github.event.inputs.confirm_destroy == 'destroy'
+      run: echo "Terraform infrastructure destroyed successfully."
