@@ -429,7 +429,7 @@ resource "aws_api_gateway_integration_response" "auth_login_options_200" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # Replace with frontend URL
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin_url}'"
   }
 
   response_templates = {
@@ -476,7 +476,7 @@ resource "aws_api_gateway_integration_response" "auth_register_options_200" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # Replace with frontend URL
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin_url}'"
   }
   response_templates = {
     "application/json" = ""
@@ -522,7 +522,7 @@ resource "aws_api_gateway_integration_response" "inventory_items_options_200" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # Replace with frontend URL
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin_url}'"
   }
   response_templates = {
     "application/json" = ""
@@ -568,7 +568,7 @@ resource "aws_api_gateway_integration_response" "inventory_item_id_options_200" 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'DELETE,OPTIONS'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # Replace with frontend URL
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin_url}'"
   }
   response_templates = {
     "application/json" = ""
@@ -614,7 +614,7 @@ resource "aws_api_gateway_integration_response" "recipes_generate_options_200" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # Replace with frontend URL
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin_url}'"
   }
   response_templates = {
     "application/json" = ""

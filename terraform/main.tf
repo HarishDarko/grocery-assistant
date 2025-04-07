@@ -16,6 +16,7 @@ module "backend" {
   private_subnet_ids  = module.network.private_subnet_ids
   lambda_sg_id        = module.network.lambda_sg_id
   secrets_manager_arn = var.secrets_manager_arn
+  allowed_origin_url  = module.frontend.cloudfront_distribution_url # Pass CloudFront URL for CORS
 }
 
 module "frontend" {
@@ -28,4 +29,4 @@ module "frontend" {
 }
 
 # Added comment to trigger workflow - {current_date} 
-# Added another comment to trigger workflow - {current_date} 
+# Added another comment to trigger workflow - {current_date}

@@ -50,3 +50,8 @@ variable "lambda_runtime" {
   type        = string
   default     = "python3.12"
 }
+
+variable "allowed_origin_url" {
+  description = "The URL of the frontend origin allowed for CORS requests (e.g., CloudFront URL)."
+  type        = string
+}
