@@ -27,4 +27,4 @@ module "frontend" {
   api_gateway_invoke_url = module.backend.api_gateway_invoke_url # Pass API Gateway URL to frontend module
 }
 
-# Added comment to trigger workflow - {current_date}
+# Added comment to trigger workflow - {current_date} 
