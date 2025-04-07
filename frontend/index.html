@@ -231,6 +231,7 @@
                     console.log('ServiceWorker registration successful:', registration.scope);
                     
                     // Clear auth cache on logout
+                    //test frontend trigger to S3 bucket from github workflow
                     eventBus.on(Events.AUTH.LOGOUT, () => {
                         registration.active?.postMessage({
                             type: 'CLEAR_AUTH_CACHE'
