@@ -23,7 +23,7 @@ if backend_root not in sys.path:
 from utils.secrets import get_secret_value
 
 # Define allowed origins
-FRONTEND_ORIGIN = 'http://grocery-assistant-frontend-capstone-85u.s3-website.ca-central-1.amazonaws.com'
+FRONTEND_ORIGIN = 'https://d1k7vf5yu4148q.cloudfront.net'
 LOCAL_DEV_ORIGIN = 'http://localhost:5000'
 ALLOWED_ORIGINS = [FRONTEND_ORIGIN, LOCAL_DEV_ORIGIN]
 

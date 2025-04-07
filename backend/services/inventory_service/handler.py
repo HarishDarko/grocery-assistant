@@ -44,7 +44,7 @@ app = Flask(__name__)
 logger.info("Flask app initialized.")
 
 # Define allowed origins
-FRONTEND_ORIGIN = 'http://grocery-assistant-frontend-capstone-85u.s3-website.ca-central-1.amazonaws.com'
+FRONTEND_ORIGIN = 'https://d1k7vf5yu4148q.cloudfront.net'
 LOCAL_DEV_ORIGIN = 'http://localhost:5000'
 ALLOWED_ORIGINS = [FRONTEND_ORIGIN, LOCAL_DEV_ORIGIN]
 
@@ -58,7 +58,7 @@ CORS(app,
 logger.info("CORS configured.")
 
 # Define the frontend origin for CORS - Deprecated, use ALLOWED_ORIGINS
-# FRONTEND_ORIGIN = 'http://grocery-assistant-frontend-capstone-85u.s3-website.ca-central-1.amazonaws.com'
+# FRONTEND_ORIGIN = 'https://d1k7vf5yu4148q.cloudfront.net'
 
 def _build_cors_response(body, status_code=200):
     """Helper function to build a JSON response with CORS headers."""
