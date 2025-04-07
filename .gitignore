@@ -89,9 +89,9 @@ Desktop.ini
 
 # Optional Local Development Scripts
 # Uncomment if you want to exclude these
-#run-local.js
-#run-local.py
-#update-config.js
+run-local.js
+run-local.py
+update-config.js
 
 # Documentation and Diagrams
 diagrams/
