@@ -37,7 +37,7 @@ elif command -v pip3 &> /dev/null; then
 fi
 echo "Using pip command: $PIP_COMMAND"
 
-$PIP_COMMAND install --system --no-cache-dir -r "$PROJECT_BACKEND_DIR/requirements.txt" \
+$PIP_COMMAND install --no-cache-dir -r "$PROJECT_BACKEND_DIR/requirements.txt" \
     --target "$BUILD_DIR/base_deps"
 
 if [ $? -ne 0 ]; then echo "ERROR: pip install failed!"; exit 1; fi
