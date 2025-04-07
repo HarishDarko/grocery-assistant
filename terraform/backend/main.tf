@@ -79,7 +79,8 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
 data "archive_file" "auth_service_zip" {
   type        = "zip"
   # Source directory path is relative to this terraform/backend/main.tf file
-  source_dir  = "${path.root}/build/package_auth_service" 
+  source_dir  = "${path.root}/../build/package_auth_service"  
+  # OR move build directories to terraform directory
   output_path = "${path.module}/auth_service_deployment_package.zip" 
 
   # Exclude common Terraform and Git directories if they somehow end up in the build

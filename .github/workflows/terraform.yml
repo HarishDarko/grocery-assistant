@@ -67,66 +67,69 @@ jobs:
           done
           echo "Project structure verified."
 
-      - name: Install packaging dependencies and Prepare Build Area
+      - name: Prepare Build Area at Root
         run: |
-          echo "Updating package lists..."
-          sudo apt-get update
-          
-          echo "Installing build dependencies..."
-          sudo apt-get install -y python3.12-dev build-essential
-          
-          echo "Creating build directories..."
-          for dir in base_deps package_auth_service package_inventory_service package_recipe_service; do
-            mkdir -p "./build/$dir"
-            if [ ! -d "./build/$dir" ]; then
-              echo "ERROR: Failed to create ./build/$dir"
-              exit 1
-            fi
-          done
-          echo "Build directories created successfully."
+          echo "Creating build directories at repository root..."
+          # Create the main build dir and subdirs at the root level
+          mkdir -p ./build/base_deps
+          mkdir -p ./build/package_auth_service
+          mkdir -p ./build/package_inventory_service
+          mkdir -p ./build/package_recipe_service
+          echo "Build directories created successfully at ./build/"
+        # No working-directory needed, runs at root by default
 
       - name: Install Base Python Dependencies & Copy Utils
         run: |
-          echo "Installing base dependencies from backend/requirements.txt into ./build/base_deps..."
-          # Remove --system flag and use pip's regular install
+          echo "Installing base dependencies from backend/requirements.txt into ./build/base_deps (at root)..."
+          # Install dependencies into the build dir at the root
           python3.12 -m pip install --no-cache-dir -r ./backend/requirements.txt --target ./build/base_deps
-          if [ $? -ne 0 ]; then 
+          if [ $? -ne 0 ]; then
             echo "ERROR: pip install failed!"
             exit 1
           fi
-          
-          # Only copy utils if directory exists
+
+          # Only copy utils if directory exists (relative to root)
           if [ -d "./backend/utils" ]; then
-            echo "Copying shared utils from backend/utils into ./build/base_deps..."
+            echo "Copying shared utils from backend/utils into ./build/base_deps (at root)..."
             cp -r ./backend/utils ./build/base_deps/
             echo "Shared utils copied."
           else
             echo "Warning: utils directory not found, skipping..."
           fi
+        # No working-directory needed, runs at root
 
       - name: Stage Auth Service Package
         run: |
-          echo "Staging auth_service package into ./build/package_auth_service..."
+          echo "Staging auth_service package into ./build/package_auth_service (at root)..."
+          # Copy base dependencies from root build dir
           cp -a ./build/base_deps/. ./build/package_auth_service/
+          # Copy service code from backend dir (relative to root)
           cp ./backend/services/auth_service/*.py ./build/package_auth_service/
           echo "auth_service package staged."
+        # No working-directory needed, runs at root
 
       - name: Stage Inventory Service Package
         run: |
-          echo "Staging inventory_service package into ./build/package_inventory_service..."
+          echo "Staging inventory_service package into ./build/package_inventory_service (at root)..."
+          # Copy base dependencies from root build dir
           cp -a ./build/base_deps/. ./build/package_inventory_service/
+          # Copy service code from backend dir (relative to root)
           cp ./backend/services/inventory_service/*.py ./build/package_inventory_service/
           echo "inventory_service package staged."
+        # No working-directory needed, runs at root
 
       - name: Stage Recipe Service Package
         run: |
-          echo "Staging recipe_service package into ./build/package_recipe_service..."
+          echo "Staging recipe_service package into ./build/package_recipe_service (at root)..."
+          # Copy base dependencies from root build dir
           cp -a ./build/base_deps/. ./build/package_recipe_service/
+          # Copy service code from backend dir (relative to root)
           cp ./backend/services/recipe_service/*.py ./build/package_recipe_service/
           echo "recipe_service package staged."
-          
-          echo "--- Lambda package staging complete. Staged directories: ---"
+
+          echo "--- Lambda package staging complete. Staged directories at ./build: ---"
           ls -R ./build # List staged contents for verification
+        # No working-directory needed, runs at root
 
       # --- Terraform Steps ---
       - name: Terraform Init
