@@ -89,14 +89,16 @@ data "archive_file" "auth_service_zip" {
 
 data "archive_file" "inventory_service_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/build/package_inventory_service"
+  # Corrected path: ../build relative to terraform directory (path.root)
+  source_dir  = "${path.root}/../build/package_inventory_service"
   output_path = "${path.module}/inventory_service_deployment_package.zip"
   excludes    = [".terraform", ".git", "__pycache__"]
 }
 
 data "archive_file" "recipe_service_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/build/package_recipe_service"
+  # Corrected path: ../build relative to terraform directory (path.root)
+  source_dir  = "${path.root}/../build/package_recipe_service"
   output_path = "${path.module}/recipe_service_deployment_package.zip"
   excludes    = [".terraform", ".git", "__pycache__"]
 }

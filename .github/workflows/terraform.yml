@@ -67,6 +67,9 @@ jobs:
           done
           echo "Project structure verified."
 
+      - name: Log PWD before Build
+        run: pwd
+
       - name: Prepare Build Area at Root
         run: |
           echo "Creating build directories at repository root..."
@@ -130,6 +133,15 @@ jobs:
           echo "--- Lambda package staging complete. Staged directories at ./build: ---"
           ls -R ./build # List staged contents for verification
         # No working-directory needed, runs at root
+
+      - name: Debug - Check Build Directory Contents
+        run: |
+          echo "Listing contents of ./build before terraform steps:"
+          ls -lR ./build
+        # No working-directory needed, runs at root
+
+      - name: Log PWD before Terraform Init
+        run: pwd
 
       # --- Terraform Steps ---
       - name: Terraform Init
