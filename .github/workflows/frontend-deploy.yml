@@ -43,12 +43,6 @@ jobs:
       - name: Terraform Init for Output Reading
         id: init
         run: |
-          # Ensure terraform directory exists
-          if [ ! -d "terraform" ]; then
-            echo "Error: Terraform directory not found. Make sure the code is checked out correctly."
-            exit 1
-          fi
-          
           echo "Initializing Terraform to read state from S3 backend..."
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
