@@ -232,6 +232,7 @@
                     
                     // Clear auth cache on logout
                     //test frontend trigger to S3 bucket from github workflow
+                    //test frontend trigger to S3 bucket from github workflow last capstone Group 10
                     eventBus.on(Events.AUTH.LOGOUT, () => {
                         registration.active?.postMessage({
                             type: 'CLEAR_AUTH_CACHE'
