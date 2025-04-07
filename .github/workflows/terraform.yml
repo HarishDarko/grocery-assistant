@@ -56,9 +56,14 @@ jobs:
         id: plan
         # Generate plan only on push to main or for PRs
         if: github.event_name == 'push' || github.event_name == 'pull_request'
-        run: terraform plan -input=false -no-color -out=tfplan
+        run: terraform plan -input=false -no-color -out=tfplan -var="secrets_manager_arn=${{ secrets.SECRETS_MANAGER_ARN }}"
         working-directory: ${{ env.TF_WORKING_DIR }}
         continue-on-error: true # Allow plan to fail without failing the workflow
+        env:
+          # Pass secret to Terraform as an environment variable (alternative to -var)
+          # TF_VAR_secrets_manager_arn: ${{ secrets.SECRETS_MANAGER_ARN }} 
+          # Using -var flag directly in run command for clarity here
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for PR comments script later
 
       # --- Plan Output Handling ---
       - name: Get Plan Output
@@ -111,5 +116,7 @@ jobs:
       # --- Apply Step (Only on push to main branch) ---
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.plan.outcome == 'success'
-        run: terraform apply -auto-approve tfplan
+        # Apply step doesn't need the var again as it uses the plan file 'tfplan'
+        # However, if plan failed and we wanted apply to run directly (not recommended), we'd need the var here too.
+        run: terraform apply -auto-approve -input=false tfplan 
         working-directory: ${{ env.TF_WORKING_DIR }}

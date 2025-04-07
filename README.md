@@ -771,6 +771,7 @@ Your final repository structure should look like this:
 6.  **GitHub Secrets:** Configure the following secrets in your GitHub repository settings (`Settings` -> `Secrets and variables` -> `Actions` -> `Repository secrets`):
     *   `AWS_ACCESS_KEY_ID`: The Access Key ID for the IAM user mentioned in step 2.
     *   `AWS_SECRET_ACCESS_KEY`: The Secret Access Key for the IAM user.
+    *   `SECRETS_MANAGER_ARN`: The full ARN of the AWS Secrets Manager secret you created (e.g., `arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:YOUR_SECRET_NAME-XXXXXX`). This is required by the Terraform workflows.
     *   `CLOUDFRONT_DISTRIBUTION_ID`: Leave this empty initially. It will be populated after the first successful Terraform deployment.
 
 ### Initial Setup and Deployment Steps
@@ -806,7 +807,7 @@ Follow these steps carefully to set up your environment and perform the initial 
         secrets_manager_arn = "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:YOUR_SECRET_NAME-XXXXXX" 
         ```
         Replace the placeholder ARN with your actual secret ARN.
-    *   **Crucially:** Add `terraform/terraform.tfvars` to your `.gitignore` file to prevent committing sensitive information.
+    *   **Crucially:** Add `terraform/terraform.tfvars` to your `.gitignore` file to prevent committing sensitive information locally. The ARN value will be provided to the GitHub Actions workflows via the `SECRETS_MANAGER_ARN` secret you configure in repository settings.
 
 3.  **Initialize Terraform Locally:**
     *   Open a terminal or command prompt in the root directory of your project.
