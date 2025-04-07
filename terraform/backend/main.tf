@@ -75,11 +75,13 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
 # These data sources read the directories prepared by the GitHub Actions workflow
 # (e.g., ../build/package_auth_service relative to this file)
 # and create zip files during the terraform plan/apply phase.
+# These are conditionally created based on the `create_lambda_package` variable.
 
 data "archive_file" "auth_service_zip" {
+  count       = var.create_lambda_package ? 1 : 0
   type        = "zip"
-  # Source directory path is relative to this terraform/backend/main.tf file
-  source_dir  = "${path.root}/../build/package_auth_service"  
+  # Source directory path is relative to the root terraform directory (path.root)
+  source_dir  = "${path.root}/../build/package_auth_service"
   # OR move build directories to terraform directory
   output_path = "${path.module}/auth_service_deployment_package.zip" 
 
@@ -88,16 +90,18 @@ data "archive_file" "auth_service_zip" {
 }
 
 data "archive_file" "inventory_service_zip" {
+  count       = var.create_lambda_package ? 1 : 0
   type        = "zip"
-  # Corrected path: ../build relative to terraform directory (path.root)
+  # Source directory path is relative to the root terraform directory (path.root)
   source_dir  = "${path.root}/../build/package_inventory_service"
   output_path = "${path.module}/inventory_service_deployment_package.zip"
   excludes    = [".terraform", ".git", "__pycache__"]
 }
 
 data "archive_file" "recipe_service_zip" {
+  count       = var.create_lambda_package ? 1 : 0
   type        = "zip"
-  # Corrected path: ../build relative to terraform directory (path.root)
+  # Source directory path is relative to the root terraform directory (path.root)
   source_dir  = "${path.root}/../build/package_recipe_service"
   output_path = "${path.module}/recipe_service_deployment_package.zip"
   excludes    = [".terraform", ".git", "__pycache__"]
@@ -113,9 +117,10 @@ resource "aws_lambda_function" "auth_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  # Use the archive_file data source for the deployment package
-  filename         = data.archive_file.auth_service_zip.output_path
-  source_code_hash = data.archive_file.auth_service_zip.output_base64sha256
+  # Use the archive_file data source for the deployment package (conditionally)
+  # If create_lambda_package is false, these will be null, which is okay for destroy.
+  filename         = var.create_lambda_package ? data.archive_file.auth_service_zip[0].output_path : null
+  source_code_hash = var.create_lambda_package ? data.archive_file.auth_service_zip[0].output_base64sha256 : null
 
   # Option 2: S3 deployment package (uncomment and configure if using S3 - remove filename/hash above)
   # s3_bucket = "your-lambda-deployment-bucket"
@@ -151,9 +156,9 @@ resource "aws_lambda_function" "inventory_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  # Use the archive_file data source for the deployment package
-  filename         = data.archive_file.inventory_service_zip.output_path
-  source_code_hash = data.archive_file.inventory_service_zip.output_base64sha256
+  # Use the archive_file data source for the deployment package (conditionally)
+  filename         = var.create_lambda_package ? data.archive_file.inventory_service_zip[0].output_path : null
+  source_code_hash = var.create_lambda_package ? data.archive_file.inventory_service_zip[0].output_base64sha256 : null
 
   environment {
     variables = {
@@ -185,9 +190,9 @@ resource "aws_lambda_function" "recipe_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  # Use the archive_file data source for the deployment package
-  filename         = data.archive_file.recipe_service_zip.output_path
-  source_code_hash = data.archive_file.recipe_service_zip.output_base64sha256
+  # Use the archive_file data source for the deployment package (conditionally)
+  filename         = var.create_lambda_package ? data.archive_file.recipe_service_zip[0].output_path : null
+  source_code_hash = var.create_lambda_package ? data.archive_file.recipe_service_zip[0].output_base64sha256 : null
 
   environment {
     variables = {

@@ -52,7 +52,8 @@ jobs:
       if: github.event.inputs.confirm_destroy == 'destroy'
       # Pass the secret ARN using -var flag. Remove -var-file if not needed or ensure it exists.
       # Assuming terraform.tfvars is NOT committed and only contains the ARN locally.
-      run: terraform plan -destroy -no-color -input=false -var="secrets_manager_arn=${{ secrets.SECRETS_MANAGER_ARN }}" 
+      # Also pass create_lambda_package=false to skip archive_file data sources.
+      run: terraform plan -destroy -no-color -input=false -var="secrets_manager_arn=${{ secrets.SECRETS_MANAGER_ARN }}" -var="create_lambda_package=false"
       continue-on-error: true # Allow workflow to continue to display plan even if errors occur
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For potential future PR comments if needed
@@ -74,7 +75,8 @@ jobs:
       id: destroy
       if: github.event.inputs.confirm_destroy == 'destroy'
       # Pass the secret ARN using -var flag. Remove -var-file if not needed or ensure it exists.
-      run: terraform destroy -auto-approve -no-color -input=false -var="secrets_manager_arn=${{ secrets.SECRETS_MANAGER_ARN }}"
+      # Also pass create_lambda_package=false to skip archive_file data sources.
+      run: terraform destroy -auto-approve -no-color -input=false -var="secrets_manager_arn=${{ secrets.SECRETS_MANAGER_ARN }}" -var="create_lambda_package=false"
       # Note: -auto-approve skips the interactive confirmation prompt in the CLI
       # The workflow_dispatch input serves as the safety mechanism.
 

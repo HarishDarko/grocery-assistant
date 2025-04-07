@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "create_lambda_package" {
+  description = "Flag to control whether Lambda deployment packages (archive_file) should be created. Set to false during destroy."
+  type        = bool
+  default     = true
+}
+
 variable "stage" {
   description = "The deployment stage (e.g., prod, dev)."
   type        = string
