@@ -1,0 +1,115 @@
+name: "Terraform CI/CD"
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml' # Trigger on workflow changes too
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml'
+
+permissions:
+  contents: read
+  pull-requests: write # Needed for adding plan comments to PRs
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    env:
+      # Set working directory for all terraform commands
+      TF_WORKING_DIR: ./terraform 
+      # Set AWS region (can also be set via AWS credentials config)
+      AWS_DEFAULT_REGION: "us-east-1" 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0" # Specify a version if needed
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -input=false
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+      - name: Terraform Plan
+        id: plan
+        # Generate plan only on push to main or for PRs
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        run: terraform plan -input=false -no-color -out=tfplan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        continue-on-error: true # Allow plan to fail without failing the workflow
+
+      # --- Plan Output Handling ---
+      - name: Get Plan Output
+        id: plan-output
+        if: steps.plan.outcome == 'success' || steps.plan.outcome == 'failure' # Run even if plan fails
+        run: |
+          # Store the plan output in a variable, escaping for JSON
+          PLAN_OUTPUT=$(terraform show -no-color tfplan 2>&1)
+          # Make it multiline friendly for GitHub Actions
+          PLAN_OUTPUT="${PLAN_OUTPUT//'%'/'%25'}"
+          PLAN_OUTPUT="${PLAN_OUTPUT//$'\n'/'%0A'}"
+          PLAN_OUTPUT="${PLAN_OUTPUT//$'\r'/'%0D'}"
+          echo "plan_text=${PLAN_OUTPUT}" >> $GITHUB_OUTPUT
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+      - name: Add Plan Comment to PR
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'success'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const planOutput = `${{ steps.plan-output.outputs.plan_text }}`;
+            const maxCommentLength = 65536; // GitHub comment length limit
+            let truncatedOutput = planOutput;
+            if (planOutput.length > maxCommentLength) {
+              truncatedOutput = planOutput.substring(0, maxCommentLength - 100) + "\n\n... (plan output truncated)";
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `**Terraform Plan Output:**\n\`\`\`terraform\n${truncatedOutput}\n\`\`\``
+            });
+
+      - name: Add Plan Failure Comment to PR
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const planError = `${{ steps.plan-output.outputs.plan_text }}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `**Terraform Plan Failed:**\n\`\`\`\n${planError}\n\`\`\``
+            });
+            core.setFailed('Terraform plan failed.'); // Fail the workflow explicitly
+
+      # --- Apply Step (Only on push to main branch) ---
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.plan.outcome == 'success'
+        run: terraform apply -auto-approve tfplan
+        working-directory: ${{ env.TF_WORKING_DIR }}

@@ -1,0 +1,33 @@
+{
+    "s3": {
+        "bucket": "your-frontend-bucket-name",
+        "region": "us-east-1",
+        "cors": {
+            "allowedOrigins": ["*"],
+            "allowedMethods": ["GET", "HEAD"],
+            "allowedHeaders": ["*"],
+            "maxAgeSeconds": 3000
+        }
+    },
+    "cloudfront": {
+        "distributionId": "your-distribution-id",
+        "domain": "your-cloudfront-distribution.cloudfront.net",
+        "priceClass": "PriceClass_100"
+    },
+    "cache": {
+        "static": {
+            "maxAge": 31536000,
+            "files": ["*.js", "*.css", "*.png", "*.jpg", "*.gif", "*.svg", "*.woff", "*.woff2"]
+        },
+        "html": {
+            "maxAge": 0
+        },
+        "api": {
+            "maxAge": 0,
+            "staleWhileRevalidate": 60
+        }
+    },
+    "errorPages": {
+        "404": "/index.html"
+    }
+}

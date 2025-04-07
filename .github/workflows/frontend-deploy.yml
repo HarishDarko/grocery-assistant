@@ -1,0 +1,94 @@
+name: "Frontend Deployment"
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-deploy.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: "Deploy Frontend to S3 and Invalidate CloudFront"
+    runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: "us-east-1"
+      # Get S3 bucket name and CloudFront ID from Terraform outputs or define here
+      # Option 1: Define statically (replace after first TF apply)
+      # S3_BUCKET_NAME: "grocery-assistant-frontend-prod-xxxx" 
+      # CLOUDFRONT_ID: "E1234567890ABC"
+      # Option 2: Use Terraform output (requires reading state or passing outputs)
+      # This example assumes static names/secrets for simplicity
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      # Optional: Add build step if needed (e.g., npm run build)
+      # - name: Set up Node.js
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: '18' # Or your required version
+      # - name: Install Dependencies
+      #   run: npm ci
+      #   working-directory: ./frontend
+      # - name: Build Frontend
+      #   run: npm run build # Adjust build command if necessary
+      #   working-directory: ./frontend
+
+      - name: Deploy to S3
+        run: |
+          echo "Deploying frontend to S3..."
+          # Replace with actual bucket name after first Terraform apply
+          S3_BUCKET_NAME=$(aws s3api list-buckets --query 'Buckets[?starts_with(Name, `groceryassistant-frontend-prod-`)].Name' --output text | head -n 1)
+          
+          if [ -z "$S3_BUCKET_NAME" ]; then echo "S3 bucket name not found!"; exit 1; fi
+
+          echo "Syncing files to bucket: $S3_BUCKET_NAME"
+          # Sync contents of frontend directory (or build output dir if using build step)
+          # Exclude unnecessary files
+          aws s3 sync frontend/ s3://${S3_BUCKET_NAME} --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "node_modules/*" \
+            --exclude "*.sh" \
+            --exclude "*.js.map" \
+            --exclude "run-local.js" \
+            --exclude "deploy.js" \
+            --exclude "deploy-config.json" \
+            --exclude "s3-cors-config.json" \
+            --exclude ".htaccess" \
+            --exclude "web.config" \
+            --exclude "README.md" 
+          echo "S3 sync complete."
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          echo "Invalidating CloudFront cache..."
+          # Replace with actual CloudFront Distribution ID from secrets or TF output
+          CLOUDFRONT_ID=${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} 
+          
+          if [ -z "$CLOUDFRONT_ID" ]; then 
+            echo "CLOUDFRONT_DISTRIBUTION_ID secret not set. Attempting to find distribution..."
+            # Attempt to find distribution ID based on tags or comment (less reliable)
+            CLOUDFRONT_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='CloudFront distribution for GroceryAssistant frontend'].Id" --output text)
+            if [ -z "$CLOUDFRONT_ID" ]; then 
+              echo "Could not automatically find CloudFront Distribution ID. Please set the CLOUDFRONT_DISTRIBUTION_ID secret."; 
+              exit 1; 
+            fi
+            echo "Found CloudFront ID: $CLOUDFRONT_ID"
+          fi
+
+          aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*"
+          echo "CloudFront invalidation created."

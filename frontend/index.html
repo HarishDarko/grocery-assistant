@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Assistant</title>
+    <meta name="description" content="AI-powered grocery assistant to help manage your food inventory and suggest recipes">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/inventory.css">
+    <link rel="stylesheet" href="styles/recipe.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load markdown-it from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/14.1.0/markdown-it.min.js"></script>
+    
+    <!-- Add global config first - Load as module -->
+    <script type="module" src="js/config.js"></script>
+    
+    <!-- Then load other modules -->
+    <script type="module" src="js/core/eventBus.js"></script>
+    <!-- Removed incorrect events.js reference -->
+    <script type="module" src="js/core/utils.js"></script>
+    <script type="module" src="js/services/auth/auth.js"></script>
+    <script type="module" src="js/services/inventory/inventory.js"></script>
+    <script type="module" src="js/services/recipe/recipe.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('JavaScript error:', message, 'at', source, 'line', lineno, ':', error);
+            return false;
+        };
+        
+        // Ensure CONFIG is globally available - Handled by config.js module export
+        /*
+        if (typeof CONFIG === 'undefined' && window.CONFIG) {
+            window.CONFIG = window.CONFIG;
+        }*/
+    </script>
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        connect-src 'self' http://localhost:3000 http://localhost:3001 http://localhost:3002 https://*.execute-api.us-east-1.amazonaws.com https://*.execute-api.ca-central-1.amazonaws.com;
+        script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
+        img-src 'self' data: https:;
+        font-src 'self' https://cdnjs.cloudflare.com;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="container header-content">
+            <h1 class="app-title">
+                <i class="fas fa-shopping-basket app-logo"></i>
+                Grocery Assistant
+            </h1>
+            <div class="user-controls">
+                <span class="user-name" id="userName"></span>
+                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <main class="main-content">
+            <!-- Authentication Section -->
+            <section id="auth" class="auth-container" style="display: none;">
+                <div class="auth-header">
+                    <i class="fas fa-apple-alt auth-logo"></i>
+                    <h2 class="auth-title">Grocery Assistant</h2>
+                    <p class="auth-subtitle">Manage your food inventory and discover new recipes</p>
+                </div>
+                
+                <div id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" id="username" class="form-control" placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="Enter your password">
+                    </div>
+                    <button type="button" id="loginBtn" class="btn">Login</button>
+                    <p class="auth-switch">Don't have an account? <a href="#" id="showRegister">Register</a></p>
+                </div>
+                
+                <form id="registerForm" class="auth-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="registerUsername" class="form-label">Username</label>
+                        <input type="text" id="registerUsername" class="form-control" placeholder="Choose a username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail" class="form-label">Email</label>
+                        <input type="email" id="registerEmail" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword" class="form-label">Password (min 8 chars)</label>
+                        <input type="password" id="registerPassword" class="form-control" placeholder="Choose a password" required minlength="8">
+                    </div>
+                    <button type="submit" id="registerBtn" class="btn">Register</button>
+                    <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Login</a></p>
+                </form>
+            </section>
+
+            <!-- Inventory Section -->
+            <section id="inventory" class="content-section">
+                <div class="inventory-container">
+                    <div class="inventory-header">
+                        <h2><i class="fas fa-box-open"></i> My Inventory</h2>
+                        <div class="inventory-controls">
+                            <div class="sort-controls">
+                                <label for="sortBy">Sort by:</label>
+                                <select id="sortBy">
+                                    <option value="added">Date Added</option>
+                                    <option value="name">Name</option>
+                                    <option value="category">Category</option>
+                                    <option value="expiry">Expiry</option>
+                                </select>
+                                <button id="sortOrder" title="Toggle sort order">
+                                    <i class="fas fa-sort-up"></i>
+                                </button>
+                            </div>
+                            <form id="addItemForm" class="add-item-form">
+                                <div class="input-group">
+                                    <label for="itemName">Add Item:</label>
+                                    <input type="text" id="itemName" placeholder="Enter item name" required>
+                                    <button type="submit" class="btn">Add</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Inventory Table Section -->
+                    <div class="inventory-table-container">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Predicted Expiry</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="groceryListBody">
+                                <!-- Items will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="pagination" class="pagination-controls">
+                        <!-- Pagination controls will be added here dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recipe Section -->
+            <section id="recipe" class="content-section">
+                <div class="recipe-container">
+                    <div class="recipe-header">
+                        <h2><i class="fas fa-utensils"></i> Recipe Suggestions</h2>
+                        <button id="getRecipesBtn" class="btn">
+                            <i class="fas fa-magic"></i>
+                            Get Recipe Suggestions
+                        </button>
+                    </div>
+                    <div id="recipe-display" class="recipe-content">
+                        <div class="recipe-placeholder">
+                            <i class="fas fa-book-open"></i>
+                            <p>Click "Get Recipe Suggestions" to get AI-powered recipe suggestions based on your inventory</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Message Area for notifications -->
+    <div id="messageArea" class="message-area"></div>
+
+    <!-- Theme toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const htmlElement = document.documentElement;
+            const toggleIcon = themeToggle.querySelector('i');
+            
+            // Check if user has a theme preference in localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                htmlElement.setAttribute('data-theme', savedTheme);
+                updateIcon(savedTheme);
+            }
+            
+            // Toggle theme when the button is clicked
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = htmlElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                htmlElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateIcon(newTheme);
+            });
+            
+            function updateIcon(theme) {
+                if (theme === 'dark') {
+                    toggleIcon.classList.remove('fa-moon');
+                    toggleIcon.classList.add('fa-sun');
+                } else {
+                    toggleIcon.classList.remove('fa-sun');
+                    toggleIcon.classList.add('fa-moon');
+                }
+            }
+        });
+    </script>
+
+    <!-- Load JavaScript modules -->
+    <script type="module">
+        import { eventBus, Events } from './js/core/eventBus.js';
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/serviceWorker.js');
+                    console.log('ServiceWorker registration successful:', registration.scope);
+                    
+                    // Clear auth cache on logout
+                    eventBus.on(Events.AUTH.LOGOUT, () => {
+                        registration.active?.postMessage({
+                            type: 'CLEAR_AUTH_CACHE'
+                        });
+                    });
+                } catch (error) {
+                    console.error('ServiceWorker registration failed:', error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

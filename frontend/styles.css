@@ -1,0 +1,586 @@
+/* Base styles and reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Dark theme colors */
+:root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --accent: #3498db;
+    --accent-hover: #2980b9;
+    --border: #404040;
+    --success-bg: #1e4620;
+    --success-text: #4caf50;
+    --error-bg: #461e1e;
+    --error-text: #f44336;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Header */
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+}
+
+/* Form styling */
+.form-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="text"] {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    flex: 1;
+    min-width: 200px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.form-group input[type="password"],
+.form-group input[type="text"],
+.form-group input[type="email"] {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+/* Add placeholder styling */
+.form-group input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* Add proper label contrast */
+.form-group label {
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* Item input styling */
+#itemName {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+#itemName:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+button {
+    background-color: var(--accent);
+    color: var(--text-primary);
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Table styling */
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    background-color: var(--bg-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    background-color: var(--bg-primary);
+    font-weight: bold;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border);
+}
+
+tr:hover {
+    background-color: var(--bg-primary);
+}
+
+/* Recipe section */
+.recipe-section {
+    text-align: center;
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.recipe-content {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    max-width: 800px;
+    margin: 1rem auto;
+}
+
+.recipe-content h3 {
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+
+.recipe-content h4 {
+    color: var(--text-secondary);
+    margin: 1rem 0 0.5rem;
+}
+
+.recipe-content ul,
+.recipe-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.recipe-content li {
+    margin-bottom: 0.5rem;
+}
+
+.recipe-content.error {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+/* Recipe styling */
+.recipe-card {
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Markdown styles */
+.recipe-card h1 {
+    color: var(--accent);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.recipe-card h2 {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin: 1rem 0 0.5rem;
+}
+
+.recipe-card blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var (--text-secondary);
+    font-style: italic;
+}
+
+.recipe-card ul, 
+.recipe-card ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.recipe-card li {
+    margin-bottom: 0.5rem;
+}
+
+.recipe-title {
+    color: var(--accent);
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.recipe-description {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
+
+.section-title {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.ingredients-list, .steps-list {
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.ingredients-list {
+    margin-left: 1rem;
+}
+
+.steps-list {
+    margin-left: 1.5rem;
+}
+
+/* Message area */
+#message-area {
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+}
+
+.success {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border: none;
+}
+
+.error {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    border: none;
+}
+
+/* Additional improvements */
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.timestamp {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.category-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    background-color: var(--accent);
+    color: var (--text-primary);
+}
+
+.filter-tag {
+    padding: 0.5rem 1rem;
+    border-radius: 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-secondary);
+    user-select: none;
+    min-width: 60px;
+    text-align: center;
+}
+
+.filter-tag:hover {
+    background-color: var(--accent);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.filter-tag.active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Markdown specific styles */
+.markdown-body {
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.markdown-body h1 {
+    color: var(--accent);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.5rem;
+    text-align: left;
+}
+
+.markdown-body h2 {
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+    margin: 1.5rem 0 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3rem;
+}
+
+.markdown-body blockquote {
+    border-left: 4px solid var(--accent);
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    background-color: var(--bg-secondary);
+    border-radius: 0 4px 4px 0;
+    color: var(--text-secondary);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+    padding-left: 2rem;
+    margin: 1rem 0;
+    list-style-position: outside;
+}
+
+.markdown-body li {
+    margin: 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.markdown-body p {
+    margin: 1rem 0;
+    color: var(--text-primary);
+}
+
+.markdown-body code {
+    background-color: var(--bg-secondary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.markdown-body pre {
+    background-color: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+/* Enhanced Recipe Display Styles */
+.recipe-display {
+    width: 100%;
+    max-width: 800px;
+    margin: 1.5rem auto;
+    text-align: left;
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-display:empty {
+    display: none;
+}
+
+/* Loading state styling */
+.recipe-display .loading {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+/* Ensure markdown headers display correctly */
+.markdown-body h1, 
+.markdown-body h2, 
+.markdown-body h3, 
+.markdown-body h4 {
+    text-align: left;
+    color: var(--accent);
+    margin-top: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Bold text styling */
+.markdown-body strong {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+/* Ensure lists display properly */
+.markdown-body ul,
+.markdown-body ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    list-style-position: outside;
+}
+
+.markdown-body ul {
+    list-style-type: disc;
+}
+
+.markdown-body ol {
+    list-style-type: decimal;
+}
+
+.markdown-body li {
+    margin-bottom: 0.5rem;
+}
+
+/* Recipe notes and additional styling */
+.markdown-body p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+/* Recipe sections */
+.markdown-body h3 + ul,
+.markdown-body h3 + ol,
+.markdown-body h2 + ul,
+.markdown-body h2 + ol {
+    margin-top: 0.5rem;
+}
+
+/* Italics */
+.markdown-body em {
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Button styling */
+.recipe-section button {
+    margin-bottom: 1rem;
+    min-width: 200px;
+}
+
+/* Recipe section header styling */
+.recipe-section h2 {
+    color: var(--accent);
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.recipe-section p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Auth styles */
+.auth-container {
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2rem;
+}
+
+.auth-box {
+    background-color: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.auth-box h2 {
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.auth-box .form-group {
+    margin-bottom: 1rem;
+}
+
+.auth-box input {
+    width: 100%;
+}
+
+.auth-box button {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.auth-box p {
+    margin-top: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.auth-box a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.auth-box a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        margin: 1rem auto;
+    }
+
+    .form-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    input[type="text"] {
+        width: 100%;
+    }
+
+    th, td {
+        padding: 0.5rem;
+    }
+}

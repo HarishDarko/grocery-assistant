@@ -1,0 +1,90 @@
+name: "Backend Deployment"
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-deploy.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: "Deploy Lambda Functions"
+    runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: "us-east-1" 
+      # Get Lambda function names from Terraform outputs or define here
+      # Option 1: Define statically (replace with actual names after first TF apply)
+      # AUTH_LAMBDA_NAME: "GroceryAssistant-AuthService-prod"
+      # INVENTORY_LAMBDA_NAME: "GroceryAssistant-InventoryService-prod"
+      # RECIPE_LAMBDA_NAME: "GroceryAssistant-RecipeService-prod"
+      # Option 2: Use Terraform output (requires reading state or passing outputs)
+      # This example assumes static names for simplicity
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install zip utility
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Package Lambda Functions
+        run: |
+          echo "Packaging Lambda functions..."
+          cd backend
+          # Ensure the packaging script is executable
+          chmod +x lambda-package-script.sh 
+          # Execute the packaging script (ensure it uses python3.12 within the script or venv)
+          # The script needs access to the project structure, assuming it runs from 'backend/'
+          ./lambda-package-script.sh 
+          echo "Packaging complete."
+          ls -l *.zip # List generated zip files for verification
+        # Note: Ensure lambda-package-script.sh correctly handles dependencies 
+        # and places zips in the expected location (backend/*.zip)
+
+      - name: Deploy Lambda Functions
+        # This assumes function names are known or retrieved.
+        # Replace placeholders if using static names.
+        # Requires AWS CLI v2
+        run: |
+          echo "Deploying Lambda functions..."
+          # Check if zip files exist before deploying
+          if [ ! -f backend/auth_deployment_package.zip ]; then echo "Auth package not found!"; exit 1; fi
+          if [ ! -f backend/inventory_deployment_package.zip ]; then echo "Inventory package not found!"; exit 1; fi
+          if [ ! -f backend/recipe_deployment_package.zip ]; then echo "Recipe package not found!"; exit 1; fi
+
+          # Replace with actual function names after first Terraform apply
+          AUTH_LAMBDA_NAME=$(aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `GroceryAssistant-AuthService-prod`)].FunctionName' --output text)
+          INVENTORY_LAMBDA_NAME=$(aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `GroceryAssistant-InventoryService-prod`)].FunctionName' --output text)
+          RECIPE_LAMBDA_NAME=$(aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `GroceryAssistant-RecipeService-prod`)].FunctionName' --output text)
+
+          if [ -z "$AUTH_LAMBDA_NAME" ]; then echo "Auth Lambda function name not found!"; exit 1; fi
+          if [ -z "$INVENTORY_LAMBDA_NAME" ]; then echo "Inventory Lambda function name not found!"; exit 1; fi
+          if [ -z "$RECIPE_LAMBDA_NAME" ]; then echo "Recipe Lambda function name not found!"; exit 1; fi
+          
+          echo "Deploying to Auth Lambda: $AUTH_LAMBDA_NAME"
+          aws lambda update-function-code --function-name "$AUTH_LAMBDA_NAME" --zip-file fileb://backend/auth_deployment_package.zip --publish
+          
+          echo "Deploying to Inventory Lambda: $INVENTORY_LAMBDA_NAME"
+          aws lambda update-function-code --function-name "$INVENTORY_LAMBDA_NAME" --zip-file fileb://backend/inventory_deployment_package.zip --publish
+
+          echo "Deploying to Recipe Lambda: $RECIPE_LAMBDA_NAME"
+          aws lambda update-function-code --function-name "$RECIPE_LAMBDA_NAME" --zip-file fileb://backend/recipe_deployment_package.zip --publish
+          
+          echo "Lambda deployment complete."
