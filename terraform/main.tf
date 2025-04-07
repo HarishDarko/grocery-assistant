@@ -28,3 +28,4 @@ module "frontend" {
 }
 
 # Added comment to trigger workflow - {current_date} 
+# Added another comment to trigger workflow - {current_date} 
