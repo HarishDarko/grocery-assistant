@@ -35,6 +35,73 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false # Ensure direct terraform commands are used
+
+      - name: Terraform Init for Output Reading
+        id: init
+        run: |
+          # Ensure terraform directory exists
+          if [ ! -d "terraform" ]; then
+            echo "Error: Terraform directory not found. Make sure the code is checked out correctly."
+            exit 1
+          fi
+          
+          echo "Initializing Terraform to read state from S3 backend..."
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=prod/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_DEFAULT_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_STATE_LOCK_TABLE }}" \
+            -reconfigure
+        working-directory: ./terraform
+        env:
+          # Prevent Terraform from trying to prompt for input
+          TF_INPUT: false
+
+      - name: Get API Gateway Invoke URL from Terraform Output
+        id: get_api_url
+        run: |
+          echo "Reading api_gateway_invoke_url from Terraform state..."
+          API_URL=$(terraform output -raw api_gateway_invoke_url)
+          if [ -z "$API_URL" ]; then
+            echo "Error: Failed to retrieve api_gateway_invoke_url from Terraform output."
+            exit 1
+          fi
+          echo "API_URL=${API_URL}" >> $GITHUB_ENV
+          echo "Successfully retrieved API Gateway URL."
+        working-directory: ./terraform
+        env:
+          TF_INPUT: false
+
+      - name: Update Frontend Config with API URL
+        run: |
+          CONFIG_FILE="frontend/js/config.js"
+          PLACEHOLDER_LINE_START="const API_GATEWAY_INVOKE_URL =" # Identify the line start
+          
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "Error: Frontend config file not found at $CONFIG_FILE"
+            exit 1
+          fi
+          
+          if [ -z "${{ env.API_URL }}" ]; then
+            echo "Error: API_URL environment variable is not set. Cannot update config."
+            exit 1
+          fi
+
+          echo "Updating $CONFIG_FILE with API URL: ${{ env.API_URL }}"
+          # Use sed to replace the entire line starting with PLACEHOLDER_LINE_START
+          # Using '|' as delimiter for sed to handle '/' in the URL
+          # Escape potential special characters in the URL for sed
+          ESCAPED_API_URL=$(printf '%s\n' "${{ env.API_URL }}" | sed 's:[][\\/.^$*]:\\&:g')
+          sed -i "s|^${PLACEHOLDER_LINE_START}.*;|${PLACEHOLDER_LINE_START} '${ESCAPED_API_URL}';|" $CONFIG_FILE
+
+          echo "Verifying replacement in $CONFIG_FILE:"
+          grep "${PLACEHOLDER_LINE_START}" $CONFIG_FILE || (echo "Verification failed: Line not found after replacement." && exit 1)
+          echo "Frontend config updated successfully."
+
       # Optional: Add build step if needed (e.g., npm run build)
       # - name: Set up Node.js
       #   uses: actions/setup-node@v3

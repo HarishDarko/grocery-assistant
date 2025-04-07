@@ -71,11 +71,37 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
-# --- Lambda Functions ---
-# Note: Assumes deployment packages are available locally or in S3
-# For local packages, use source_code_hash and filename
-# For S3 packages, use s3_bucket, s3_key, s3_object_version
+# --- Lambda Deployment Packages (using archive_file) ---
+# These data sources read the directories prepared by the GitHub Actions workflow
+# (e.g., ../build/package_auth_service relative to this file)
+# and create zip files during the terraform plan/apply phase.
 
+data "archive_file" "auth_service_zip" {
+  type        = "zip"
+  # Source directory path is relative to this terraform/backend/main.tf file
+  source_dir  = "${path.root}/build/package_auth_service" 
+  output_path = "${path.module}/auth_service_deployment_package.zip" 
+
+  # Exclude common Terraform and Git directories if they somehow end up in the build
+  excludes = [".terraform", ".git", "__pycache__"]
+}
+
+data "archive_file" "inventory_service_zip" {
+  type        = "zip"
+  source_dir  = "${path.root}/build/package_inventory_service"
+  output_path = "${path.module}/inventory_service_deployment_package.zip"
+  excludes    = [".terraform", ".git", "__pycache__"]
+}
+
+data "archive_file" "recipe_service_zip" {
+  type        = "zip"
+  source_dir  = "${path.root}/build/package_recipe_service"
+  output_path = "${path.module}/recipe_service_deployment_package.zip"
+  excludes    = [".terraform", ".git", "__pycache__"]
+}
+
+
+# --- Lambda Functions ---
 resource "aws_lambda_function" "auth_service" {
   function_name = "${var.project_name}-AuthService-${var.stage}"
   role          = aws_iam_role.lambda_exec_role.arn
@@ -84,13 +110,11 @@ resource "aws_lambda_function" "auth_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  # Option 1: Local deployment package (update path as needed)
-  # source_code_hash is based on the handler file to allow validation/plan without the zip present.
-  # The filename still points to the zip, which must be created by the CI/CD pipeline before apply.
-  filename         = "${path.root}/../backend/auth_deployment_package.zip" # Use path.root to ensure correct relative path
-  source_code_hash = filebase64sha256("${path.root}/../backend/services/auth_service/handler.py")
+  # Use the archive_file data source for the deployment package
+  filename         = data.archive_file.auth_service_zip.output_path
+  source_code_hash = data.archive_file.auth_service_zip.output_base64sha256
 
-  # Option 2: S3 deployment package (uncomment and configure if using S3)
+  # Option 2: S3 deployment package (uncomment and configure if using S3 - remove filename/hash above)
   # s3_bucket = "your-lambda-deployment-bucket"
   # s3_key    = "auth_deployment_package.zip"
 
@@ -124,10 +148,9 @@ resource "aws_lambda_function" "inventory_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  # source_code_hash is based on the handler file to allow validation/plan without the zip present.
-  # The filename still points to the zip, which must be created by the CI/CD pipeline before apply.
-  filename         = "${path.root}/../backend/inventory_deployment_package.zip" # Use path.root
-  source_code_hash = filebase64sha256("${path.root}/../backend/services/inventory_service/handler.py")
+  # Use the archive_file data source for the deployment package
+  filename         = data.archive_file.inventory_service_zip.output_path
+  source_code_hash = data.archive_file.inventory_service_zip.output_base64sha256
 
   environment {
     variables = {
@@ -159,10 +182,9 @@ resource "aws_lambda_function" "recipe_service" {
   memory_size   = var.lambda_memory_size
   timeout       = var.lambda_timeout
 
-  # source_code_hash is based on the handler file to allow validation/plan without the zip present.
-  # The filename still points to the zip, which must be created by the CI/CD pipeline before apply.
-  filename         = "${path.root}/../backend/recipe_deployment_package.zip" # Use path.root
-  source_code_hash = filebase64sha256("${path.root}/../backend/services/recipe_service/handler.py")
+  # Use the archive_file data source for the deployment package
+  filename         = data.archive_file.recipe_service_zip.output_path
+  source_code_hash = data.archive_file.recipe_service_zip.output_base64sha256
 
   environment {
     variables = {
