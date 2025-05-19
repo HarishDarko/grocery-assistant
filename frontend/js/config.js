@@ -2,7 +2,7 @@
 
 // --- AWS Deployment Configuration ---
 // IMPORTANT: Replace this placeholder with your actual API Gateway Invoke URL after deployment!
-const API_GATEWAY_INVOKE_URL = 'https://m7mqjgharj.execute-api.us-east-1.amazonaws.com/prod'; // e.g., https://abc123xyz.execute-api.us-east-1.amazonaws.com/prod
+const API_GATEWAY_INVOKE_URL = "YOUR_API_GATEWAY_INVOKE_URL"; // e.g., https://abc123xyz.execute-api.us-east-1.amazonaws.com/prod
 
 // --- Local Development Configuration ---
 const LOCAL_AUTH_URL = 'http://localhost:3000/auth';
